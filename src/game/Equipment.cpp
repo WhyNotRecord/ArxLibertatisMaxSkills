@@ -486,8 +486,18 @@ float ARX_EQUIPMENT_ComputeDamages(Entity * io_source, Entity * io_target, float
 		
 		if(io_target->_npcdata->npcflags & NPCFLAG_BACKSTAB) {
 			if(Random::getf(0.f, 100.f) <= player.m_skillFull.stealth * 0.5f) {
-				if(SendIOScriptEvent(io_source, io_source, SM_BACKSTAB) != REFUSE)
+				if(SendIOScriptEvent(io_source, io_source, SM_BACKSTAB) != REFUSE) {
 					backstab = 1.5f;
+					//CRIT_CHANGED
+					float prevStealthSkill =
+						player.m_skillFull.stealth - player.m_skillMod.stealth;
+					player.m_next_skill.stealth += skillPointMult * 0.01f * damages *
+						(neutralSkillLevel1 / prevStealthSkill);
+					player.m_next_attribute.dexterity += attributePointMult * 0.01f * damages *
+						(neutralAttributeLevel / player.m_attributeFull.dexterity);
+
+					ARX_PLAYER_CheckSkillBonus();
+				}
 			}
 		}
 		

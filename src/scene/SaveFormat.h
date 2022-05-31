@@ -423,7 +423,23 @@ struct ARX_CHANGELEVEL_PLAYER {
 	SavedVec3 LAST_VALID_POS;
 	char draggedEntity[SIZE_ID];
 	s32 padding[237];
-	
+
+	f32 Next_Attribute_Strength;
+	f32 Next_Attribute_Dexterity;
+	f32 Next_Attribute_Constitution;
+	f32 Next_Attribute_Mind;
+
+	f32 Next_Skill_Stealth;
+	f32 Next_Skill_Mecanism;
+	f32 Next_Skill_Intuition;
+
+	f32 Next_Skill_Etheral_Link;
+	f32 Next_Skill_Object_Knowledge;
+	f32 Next_Skill_Casting;
+
+	f32 Next_Skill_Projectile;
+	f32 Next_Skill_Close_Combat;
+	f32 Next_Skill_Defense;
 };
 
 struct ARX_CHANGELEVEL_INVENTORY_DATA_SAVE {

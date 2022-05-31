@@ -402,6 +402,16 @@ enum ScriptResult {
 	BIGERROR = -2
 };
 
+//CRIT_CHANGED
+//why not enum?
+#define CTYPE_POISONING	1
+#define CTYPE_REPAIRING	2
+#define	CTYPE_BREWING	3
+#define	CTYPE_FORGING	4
+#define CTYPE_GRINDING	5
+#define CTYPE_BAKING	6
+#define	CTYPE_BOTTLING	7
+
 class ScriptEventName {
 	
 	ScriptMessage m_id;
@@ -535,6 +545,16 @@ void ARX_SCRIPT_Timer_Clear_By_Name_And_IO(std::string_view timername, Entity * 
 
 ScriptResult SendIOScriptEvent(Entity * sender, Entity * entity, const ScriptEventName & event,
                                const ScriptParameters & parameters = ScriptParameters());
+//CRIT_CHANGED
+ScriptResult SendCombineIOScriptEvent(Entity* sender, Entity* entity, const ScriptEventName& event,
+	const ScriptParameters& parameters = ScriptParameters());
+int DetermineCraftingType(std::string senderClass, std::string receiverClass);
+float CalculateCraftingSkillMultiplier(Entity* sender, Entity* entity, const ScriptEventName& event, int craftingType);
+bool CanBeCrushed(std::string itemClass);
+bool CanBeBottled(std::string itemClass);
+bool CombinationToBeRewarded(std::string senderClass, std::string receiverClass);
+
+float GetPotionCreatingAbilityInfo(std::string potionName);
 
 ScriptResult SendMsgToAllIO(Entity * sender, const ScriptEventName & event,
                             const ScriptParameters & parameters = ScriptParameters());

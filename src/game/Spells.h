@@ -127,6 +127,7 @@ private:
 extern SpellManager spells;
 
 SpellType GetSpellId(std::string_view spell);
+float GetSpellLevel(Spell* spell);
 void TryToCastSpell(Entity * io, SpellType spellType, long level, EntityHandle target, SpellcastFlags flags, GameDuration duration);
 
 bool ARX_SPELLS_Launch(SpellType typ, Entity & source, SpellcastFlags flags, long level,

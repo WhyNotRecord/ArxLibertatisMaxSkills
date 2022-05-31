@@ -800,7 +800,25 @@ static long ARX_CHANGELEVEL_Push_Player(long level) {
 	}
 	
 	LastValidPlayerPos = asp->LAST_VALID_POS.toVec3();
-	
+
+	//CRIT_CHANGED
+	asp->Next_Attribute_Strength = player.m_next_attribute.strength;
+	asp->Next_Attribute_Dexterity = player.m_next_attribute.dexterity;
+	asp->Next_Attribute_Constitution = player.m_next_attribute.constitution;
+	asp->Next_Attribute_Mind = player.m_next_attribute.mind;
+
+	asp->Next_Skill_Stealth = player.m_next_skill.stealth;
+	asp->Next_Skill_Mecanism = player.m_next_skill.mecanism;
+	asp->Next_Skill_Intuition = player.m_next_skill.intuition;
+
+	asp->Next_Skill_Etheral_Link = player.m_next_skill.etheralLink;
+	asp->Next_Skill_Object_Knowledge = player.m_next_skill.objectKnowledge;
+	asp->Next_Skill_Casting = player.m_next_skill.casting;
+
+	asp->Next_Skill_Projectile = player.m_next_skill.projectile;
+	asp->Next_Skill_Close_Combat = player.m_next_skill.closeCombat;
+	asp->Next_Skill_Defense = player.m_next_skill.defense;
+
 	g_currentSavedGame->save("player", dat, pos);
 	
 	for(Entity & entity : entities) {
@@ -1619,7 +1637,41 @@ static long ARX_CHANGELEVEL_Pop_Player(std::string_view target, float angle) {
 		pos += sizeof(SavedMapMarkerData);
 		g_miniMap.mapMarkerAdd(Vec2f(acmd->x, acmd->y), acmd->lvl, util::toLowercase(script::toLocalizationKey(util::loadString(acmd->name))));
 	}
-	
+
+	//TODO CRIT_CHANGED older save compatibility
+	if (asp->Next_Attribute_Strength >= 0 && asp->Next_Attribute_Strength < 100) {
+		player.m_next_attribute.strength = asp->Next_Attribute_Strength;
+		player.m_next_attribute.dexterity = asp->Next_Attribute_Dexterity;
+		player.m_next_attribute.mind = asp->Next_Attribute_Mind;
+		player.m_next_attribute.constitution = asp->Next_Attribute_Constitution;
+
+		player.m_next_skill.stealth = asp->Next_Skill_Stealth;
+		player.m_next_skill.mecanism = asp->Next_Skill_Mecanism;
+		player.m_next_skill.intuition = asp->Next_Skill_Intuition;
+		player.m_next_skill.etheralLink = asp->Next_Skill_Etheral_Link;
+		player.m_next_skill.objectKnowledge = asp->Next_Skill_Object_Knowledge;
+		player.m_next_skill.casting = asp->Next_Skill_Casting;
+		player.m_next_skill.projectile = asp->Next_Skill_Projectile;
+		player.m_next_skill.closeCombat = asp->Next_Skill_Close_Combat;
+		player.m_next_skill.defense = asp->Next_Skill_Defense;
+	}
+	else {
+		player.m_next_attribute.strength = 0;
+		player.m_next_attribute.dexterity = 0;
+		player.m_next_attribute.mind = 0;
+		player.m_next_attribute.constitution = 0;
+
+		player.m_next_skill.stealth = 0;
+		player.m_next_skill.mecanism = 0;
+		player.m_next_skill.intuition = 0;
+		player.m_next_skill.etheralLink = 0;
+		player.m_next_skill.objectKnowledge = 0;
+		player.m_next_skill.casting = 0;
+		player.m_next_skill.projectile = 0;
+		player.m_next_skill.closeCombat = 0;
+		player.m_next_skill.defense = 0;
+	}
+
 	ARX_PLAYER_Restore_Skin();
 	
 	ARX_PLAYER_Modify_XP(0);

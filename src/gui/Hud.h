@@ -357,7 +357,10 @@ class StealthGauge : public HudItem {
 	bool m_visible;
 	Color m_color;
 	Vec2f m_size;
-	
+	//CRIT_CHANGED
+	//why is it here?
+	float START_STEALTH_DISTANCE;
+	float MIN_STEALTH_DISTANCE;
 public:
 	StealthGauge();
 	

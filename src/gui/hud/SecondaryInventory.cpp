@@ -349,6 +349,7 @@ void SecondaryInventoryHud::dropEntity() {
 			ARX_PLAYER_AddGold(price);
 			ARX_SOUND_PlayInterface(g_snd.GOLD);
 			ARX_SOUND_PlayInterface(g_snd.INVSTD);
+			IncreaseIntuitionSkill(price);
 		}
 		
 		return;
@@ -384,7 +385,7 @@ void SecondaryInventoryHud::dragEntity(Entity * io) {
 		
 		ARX_SOUND_PlayInterface(g_snd.GOLD);
 		player.gold -= price;
-		
+		IncreaseIntuitionSkill(float(price));
 	}
 	
 	ARX_SOUND_PlayInterface(g_snd.INVSTD);

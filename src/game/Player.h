@@ -336,7 +336,11 @@ struct ARXCHARACTER {
 	audio::SourcedSample magic_ambient;
 	audio::SourcedSample magic_draw;
 	audio::SourcedSample torch_loop;
-	
+
+	//CRIT_CHANGED
+	PlayerAttribute m_next_attribute;
+	PlayerSkill m_next_skill;
+
 	ARXCHARACTER()
 		: pos(0.f)
 		, m_strikeDirection(0)
@@ -418,6 +422,20 @@ extern bool USE_PLAYERCOLLISIONS;
 extern bool WILLRETURNTOCOMBATMODE;
 extern PlatformInstant LAST_JUMP_ENDTIME;
 
+//CRIT_CHANGED
+#define skillPointMult					0.15f
+#define	attributePointMult				0.01f
+#define	neutralSkillLevel1				50.f//30.f//22
+#define	neutralSkillLevel2				50.f//37.f//27
+#define	neutralSkillLevel3				50.f//44.f//32
+#define	neutralAttributeLevel			14.f
+//-----------------------------------------------------------------------------
+//int	 round(float value);
+void ARX_PLAYER_AttributeIncreasedSound();
+void ARX_PLAYER_SkillIncreasedSound();
+void ARX_PLAYER_CheckSkillBonus();
+void IncreaseIntuitionSkill(float price);
+//-----------------------------------
 void ARX_PLAYER_MakeSpHero();
 void ARX_PLAYER_LoadHeroAnimsAndMesh();
 void ARX_PLAYER_InitPlayer();

@@ -512,7 +512,9 @@ static ScriptResult combineEntities(Entity * source, Entity * target, bool peekO
 		return ACCEPT;
 	}
 	
-	return SendIOScriptEvent(source, target, SM_COMBINE, parameters);
+	//CRIT_CHANGED
+	//why?
+	return SendCombineIOScriptEvent(source, target, SM_COMBINE, parameters);
 }
 
 void updateCombineFlagForEntity(Entity * source, Entity * target) {

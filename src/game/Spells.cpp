@@ -1002,9 +1002,18 @@ bool ARX_SPELLS_Launch(SpellType typ, Entity & source, SpellcastFlags flags, lon
 	}
 	
 	spell->Launch();
-	
+	float exp_mult = (1.f / 20) * GetSpellLevel(spell.get());
 	Spell & addedSpell = spells.addSpell(std::move(spell));
-	
+	//CRIT_CHANGED
+	//Starting skill bonus processing
+	exp_mult *= 100;
+	float prevCastingSkill =
+		player.m_skillFull.casting - player.m_skillMod.casting;
+	player.m_next_skill.casting += skillPointMult * exp_mult *
+		(neutralSkillLevel1 / prevCastingSkill);
+	player.m_next_attribute.mind += attributePointMult * exp_mult * 2 *
+		(neutralAttributeLevel / player.m_attributeFull.mind);
+	ARX_PLAYER_CheckSkillBonus();
 	SPELLCAST_Notify(addedSpell);
 	
 	if(flags & SPELLCAST_FLAG_ORPHAN) {
@@ -1014,6 +1023,82 @@ bool ARX_SPELLS_Launch(SpellType typ, Entity & source, SpellcastFlags flags, lon
 	return true;
 }
 
+
+
+float GetSpellLevel(Spell* spell) {
+	switch (spell->m_type) {
+		// LEVEL 1
+	case SPELL_MAGIC_SIGHT:           // = 11:
+	case SPELL_MAGIC_MISSILE:         // = 12:
+	case SPELL_IGNIT:                 // = 13:
+	case SPELL_DOUSE:                 // = 14:
+	case SPELL_ACTIVATE_PORTAL:       // = 15:
+		return 1;
+		// LEVEL 2
+	case SPELL_HEAL:                  // = 21:
+	case SPELL_DETECT_TRAP:           // = 22:
+	case SPELL_ARMOR:                 // = 23:
+	case SPELL_LOWER_ARMOR:           // = 24:
+	case SPELL_HARM:                  // = 25:
+		return 2;
+		// LEVEL 3
+	case SPELL_SPEED:                 // = 31:
+	case SPELL_DISPELL_ILLUSION:      // = 32:
+	case SPELL_FIREBALL:              // = 33:
+	case SPELL_CREATE_FOOD:           // = 34:
+	case SPELL_ICE_PROJECTILE:        // = 35:
+		return 3;
+		// LEVEL 4
+	case SPELL_BLESS:                 // = 41:
+	case SPELL_DISPELL_FIELD:         // = 42:
+	case SPELL_FIRE_PROTECTION:       // = 43:
+	case SPELL_TELEKINESIS:           // = 44:
+	case SPELL_CURSE:                 // = 45:
+	case SPELL_COLD_PROTECTION:       // = 46:
+		return 4;
+		// LEVEL 5
+	case SPELL_RUNE_OF_GUARDING:      // = 51:
+	case SPELL_LEVITATE:              // = 52:
+	case SPELL_CURE_POISON:           // = 53:
+	case SPELL_REPEL_UNDEAD:          // = 54:
+	case SPELL_POISON_PROJECTILE:     // = 55:
+		return 5;
+		// LEVEL 6
+	case SPELL_RISE_DEAD:             // = 61:
+	case SPELL_PARALYSE:              // = 62:
+	case SPELL_CREATE_FIELD:          // = 63:
+	case SPELL_DISARM_TRAP:           // = 64:
+	case SPELL_SLOW_DOWN:             // = 65: //secret
+		return 6;
+		// LEVEL 7
+	case SPELL_FLYING_EYE:            // = 71:
+	case SPELL_FIRE_FIELD:            // = 72:
+	case SPELL_ICE_FIELD:             // = 73:
+	case SPELL_LIGHTNING_STRIKE:      // = 74:
+	case SPELL_CONFUSE:               // = 75:
+		return 7;
+		// LEVEL 8
+	case SPELL_INVISIBILITY:          // = 81:
+	case SPELL_MANA_DRAIN:            // = 82:
+	case SPELL_EXPLOSION:             // = 83:
+	case SPELL_ENCHANT_WEAPON:        // = 84:
+	case SPELL_LIFE_DRAIN:            // = 85: //secret
+		return 8;
+		// LEVEL 9
+	case SPELL_SUMMON_CREATURE:       // = 91:
+	case SPELL_NEGATE_MAGIC:          // = 92:
+	case SPELL_INCINERATE:            // = 93:
+	case SPELL_MASS_PARALYSE:         // = 94:
+		return 9;
+		// LEVEL 10
+	case SPELL_MASS_LIGHTNING_STRIKE: // = 101:
+	case SPELL_CONTROL_TARGET:        // = 102:
+	case SPELL_FREEZE_TIME:           // = 103:
+	case SPELL_MASS_INCINERATE:       // = 104
+		return 10;
+	}
+	return 0;
+}
 
 /*!
  * \brief Updates all currently working spells.

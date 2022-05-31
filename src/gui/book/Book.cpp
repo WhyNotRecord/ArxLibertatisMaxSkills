@@ -640,6 +640,29 @@ void StatsPage::manageStats()
 			cursorSetRedistribute(player.Attribute_Redistribute);
 		}
 	}
+	else if (player.Attribute_Redistribute == 0) {//CRIT CHANGED
+		if (CheckAttributeClick(bookPos + Vec2f(282, 31) * scale, &player.m_attribute.strength, g_bookResouces.ic_strength)) {
+			FLYING_OVER = BOOK_STRENGTH;
+			cursorSetNextSkill(player.m_next_attribute.strength);
+		}
+
+		if (CheckAttributeClick(bookPos + Vec2f(331, 31) * scale, &player.m_attribute.mind, g_bookResouces.ic_mind)) {
+			FLYING_OVER = BOOK_MIND;
+			cursorSetNextSkill(player.m_next_attribute.mind);
+		}
+
+		if (CheckAttributeClick(bookPos + Vec2f(380, 31) * scale, &player.m_attribute.dexterity, g_bookResouces.ic_dexterity)) {
+			FLYING_OVER = BOOK_DEXTERITY;
+			cursorSetNextSkill(player.m_next_attribute.dexterity);
+		}
+
+		if (CheckAttributeClick(bookPos + Vec2f(429, 31) * scale, &player.m_attribute.constitution, g_bookResouces.ic_constitution)) {
+			FLYING_OVER = BOOK_CONSTITUTION;
+			cursorSetNextSkill(player.m_next_attribute.constitution);
+		}
+	}
+
+
 
 	if(!((player.Skill_Redistribute == 0) && (ARXmenu.mode() != Mode_CharacterCreation))) {
 		if (CheckSkillClick(bookPos + Vec2f(293, 113) * scale, &player.m_skill.stealth, g_bookResouces.ic_stealth, player.m_skillOld.stealth)) {
@@ -692,6 +715,52 @@ void StatsPage::manageStats()
 		if(CheckSkillClick(bookPos + Vec2f(419, 220) * scale, &player.m_skill.defense, g_bookResouces.ic_defense, player.m_skillOld.defense)) {
 			FLYING_OVER = BOOK_DEFENSE;
 			cursorSetRedistribute(player.Skill_Redistribute);
+		}
+	}
+	else if (player.Attribute_Redistribute == 0) {//CRIT CHANGED
+		if (CheckSkillClick(bookPos + Vec2f(293, 113) * scale, &player.m_skill.stealth, g_bookResouces.ic_stealth, player.m_skillOld.stealth)) {
+			FLYING_OVER = BOOK_STEALTH;
+			cursorSetNextSkill(player.m_next_skill.stealth);
+		}
+
+		if (CheckSkillClick(bookPos + Vec2f(356, 113) * scale, &player.m_skill.mecanism, g_bookResouces.ic_mecanism, player.m_skillOld.mecanism)) {
+			FLYING_OVER = BOOK_MECANISM;
+			cursorSetNextSkill(player.m_next_skill.mecanism);
+		}
+
+		if (CheckSkillClick(bookPos + Vec2f(419, 113) * scale, &player.m_skill.intuition, g_bookResouces.ic_intuition, player.m_skillOld.intuition)) {
+			FLYING_OVER = BOOK_INTUITION;
+			cursorSetNextSkill(player.m_next_skill.intuition);
+		}
+
+		if (CheckSkillClick(bookPos + Vec2f(293, 166) * scale, &player.m_skill.etheralLink, g_bookResouces.ic_etheral_link, player.m_skillOld.etheralLink)) {
+			FLYING_OVER = BOOK_ETHERAL_LINK;
+			cursorSetNextSkill(player.m_next_skill.etheralLink);
+		}
+
+		if (CheckSkillClick(bookPos + Vec2f(356, 166) * scale, &player.m_skill.objectKnowledge, g_bookResouces.ic_object_knowledge, player.m_skillOld.objectKnowledge)) {
+			FLYING_OVER = BOOK_OBJECT_KNOWLEDGE;
+			cursorSetNextSkill(player.m_next_skill.objectKnowledge);
+		}
+
+		if (CheckSkillClick(bookPos + Vec2f(419, 166) * scale, &player.m_skill.casting, g_bookResouces.ic_casting, player.m_skillOld.casting)) {
+			FLYING_OVER = BOOK_CASTING;
+			cursorSetNextSkill(player.m_next_skill.casting);
+		}
+
+		if (CheckSkillClick(bookPos + Vec2f(293, 220) * scale, &player.m_skill.closeCombat, g_bookResouces.ic_close_combat, player.m_skillOld.closeCombat)) {
+			FLYING_OVER = BOOK_CLOSE_COMBAT;
+			cursorSetNextSkill(player.m_next_skill.closeCombat);
+		}
+
+		if (CheckSkillClick(bookPos + Vec2f(356, 220) * scale, &player.m_skill.projectile, g_bookResouces.ic_projectile, player.m_skillOld.projectile)) {
+			FLYING_OVER = BOOK_PROJECTILE;
+			cursorSetNextSkill(player.m_next_skill.projectile);
+		}
+
+		if (CheckSkillClick(bookPos + Vec2f(419, 220) * scale, &player.m_skill.defense, g_bookResouces.ic_defense, player.m_skillOld.defense)) {
+			FLYING_OVER = BOOK_DEFENSE;
+			cursorSetNextSkill(player.m_next_skill.defense);
 		}
 	} else {
 		if(MouseInBookRect(bookPos + Vec2f(282, 31) * scale, Vec2f(32, 32) * scale)) {

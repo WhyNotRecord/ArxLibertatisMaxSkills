@@ -60,7 +60,8 @@ enum ARX_INTERFACE_CURSOR_MODE
 	CURSOR_REDIST,
 	CURSOR_COMBINEON,
 	CURSOR_COMBINEOFF,
-	CURSOR_READY_WEAPON
+	CURSOR_READY_WEAPON,
+	CURSOR_NEXT_SKILL
 };
 
 ARX_INTERFACE_CURSOR_MODE SpecialCursor = CURSOR_UNDEFINED;
@@ -78,6 +79,11 @@ void cursorSetInteraction() {
 
 void cursorSetRedistribute(long value) {
 	SpecialCursor = CURSOR_REDIST;
+	lCursorRedistValue = value;
+}
+
+void cursorSetNextSkill(long value) {
+	SpecialCursor = CURSOR_NEXT_SKILL;
 	lCursorRedistValue = value;
 }
 
@@ -341,6 +347,7 @@ void ARX_INTERFACE_RenderCursor(bool flag) {
 			
 			switch(SpecialCursor) {
 			case CURSOR_REDIST:
+			case CURSOR_NEXT_SKILL:
 				surf = cursorRedist;
 				break;
 			case CURSOR_COMBINEOFF:
@@ -374,7 +381,7 @@ void ARX_INTERFACE_RenderCursor(bool flag) {
 			
 			arx_assert(surf);
 			
-			if(SpecialCursor == CURSOR_REDIST) {
+			if(SpecialCursor == CURSOR_REDIST || SpecialCursor == CURSOR_NEXT_SKILL) {
 				EERIEDrawBitmap(Rectf(mousePos, float(surf->m_size.x) * g_sizeRatio.x,
 				                float(surf->m_size.y) * g_sizeRatio.y), 0.f, surf, Color::white);
 				
@@ -382,7 +389,12 @@ void ARX_INTERFACE_RenderCursor(bool flag) {
 				textPos += Vec2f(16.5f, 11.5f) * g_sizeRatio;
 				
 				std::stringstream ss;
-				ss << std::setw(3) << lCursorRedistValue;
+				if (SpecialCursor == CURSOR_REDIST) {
+					ss << std::setw(3) << lCursorRedistValue;
+				}
+				else {
+					ss << std::setw(4) << lCursorRedistValue << "%";
+				}
 				
 				UNICODE_ARXDrawTextCenter(hFontInBook, textPos, ss.str(), Color::black);
 			} else {

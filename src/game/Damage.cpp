@@ -120,6 +120,11 @@ struct DAMAGE_INFO {
 
 static std::vector<DAMAGE_INFO> g_damages;
 
+//CRIT_CHANGED
+float norm_dens(float m, float sig, float x) {
+	return 1 / (sig * pow(2 * M_PI, 0.5f)) * pow(2.71828f, -(pow(x - m, 2.f)) / (2 * pow(sig, 2.f)));
+}
+
 void damageClearSpell(Spell * spell) {
 	for(DAMAGE_INFO & damage : g_damages) {
 		if(damage.spell == spell) {
@@ -466,6 +471,22 @@ float damagePlayer(float dmg, DamageType type, Entity * source) {
 				}
 			}
 		}
+
+		//CRIT_CHANGED
+		float t = dmg / player.lifePool.max;
+		//Starting skill bonus processing
+		float exp_mult = norm_dens(0.25f, 0.125f, t) / 8.f;//to a maximum value of 0.4
+														   //(when the damage is a quarter of player's health)
+		exp_mult *= 100;
+		float prevDefenseSkill =
+			player.m_skillFull.defense - player.m_skillMod.defense,
+			prevConstitutionAttribute = player.m_attributeFull.constitution;
+		player.m_next_skill.defense += skillPointMult * exp_mult *
+			(neutralSkillLevel3 / prevDefenseSkill);
+		player.m_next_attribute.constitution += attributePointMult * exp_mult * 3 *
+			(neutralAttributeLevel / prevConstitutionAttribute);
+		ARX_PLAYER_CheckSkillBonus();
+		//Ending skill bonus processing
 		
 		arx_assert(player.m_lifeMaxWithoutMods > 0.f);
 		g_screenFxBloodSplash.hit(dmg / player.m_lifeMaxWithoutMods);
@@ -850,6 +871,51 @@ float damageNpc(Entity & npc, float dmg, Entity * source, Spell * spell, DamageT
 		Entity * sender = source;
 		if((sender->ioflags & IO_NPC) && sender->_npcdata->summoner == EntityHandle_Player) {
 			sender = entities.player();
+			//CRIT_CHANGED
+			//Starting skill bonus processing
+			float prevCloseCombatSkill =
+				player.m_skillFull.closeCombat - player.m_skillMod.closeCombat,
+				prevProjectileSkill =
+				player.m_skillFull.projectile - player.m_skillMod.projectile,
+				prevStrengthAttribute = player.m_attributeFull.strength,
+				prevDexterityAttribute = player.m_attributeFull.dexterity;
+			float exp_mult = dmg / player.m_miscFull.damages;
+			exp_mult *= 100;
+			if (npc._npcdata->lifePool.max < 5)
+				exp_mult *= 0;
+			else if (npc._npcdata->lifePool.max < 10)
+				exp_mult *= 0.05f;
+			else if (npc._npcdata->lifePool.max < 20)
+				exp_mult *= 0.1f;
+			else if (npc._npcdata->lifePool.max < 40)
+				exp_mult *= 0.2f;
+			else if (npc._npcdata->lifePool.max < 60)
+				exp_mult *= 0.3f;
+			else if (npc._npcdata->lifePool.max < 100)
+				exp_mult *= 0.4f;
+			else
+				exp_mult *= 0.5f;
+			if (!spell) {
+				WeaponType wt = ARX_EQUIPMENT_GetPlayerWeaponType();
+				if (wt >= WEAPON_BARE && wt <= WEAPON_2H) {
+					player.m_next_skill.closeCombat += skillPointMult * exp_mult *
+						(neutralSkillLevel3 / prevCloseCombatSkill);
+					player.m_next_attribute.strength += attributePointMult * exp_mult * 2 *
+						(neutralAttributeLevel / prevStrengthAttribute);
+					player.m_next_attribute.dexterity += attributePointMult * exp_mult *
+						(neutralAttributeLevel / prevDexterityAttribute);
+				}
+				else if (wt == WEAPON_BOW) {
+					player.m_next_skill.projectile += skillPointMult * exp_mult *
+						(neutralSkillLevel3 / prevProjectileSkill);
+					player.m_next_attribute.strength += attributePointMult * exp_mult *
+						(neutralAttributeLevel / prevStrengthAttribute);
+					player.m_next_attribute.dexterity += attributePointMult * exp_mult * 2 *
+						(neutralAttributeLevel / prevDexterityAttribute);
+				}
+				ARX_PLAYER_CheckSkillBonus();
+				//Ending skill bonus processing
+			}
 		}
 		if(SendIOScriptEvent(sender, &npc, SM_HIT, getHitEventParameters(dmg, source, spell, type)) != ACCEPT) {
 			return 0.f;

@@ -1580,6 +1580,174 @@ ScriptResult SendIOScriptEvent(Entity * sender, Entity * entity, const ScriptEve
 	return ScriptEvent::send(&entities[num]->script, sender, entities[num], event, parameters);
 }
 
+//CRIT_CHANGED
+ScriptResult SendCombineIOScriptEvent(Entity* sender, Entity* entity, const ScriptEventName& event,
+	const ScriptParameters& parameters) {
+	ScriptResult result = SendIOScriptEvent(sender, entity, event, parameters);
+	if (!parameters.isPeekOnly()) {
+		if (result != REFUSE ||
+			(result == REFUSE && CombinationToBeRewarded(sender->className(), entity->className()))) {
+			int craftingType = DetermineCraftingType(sender->className(), entity->className());
+			if (craftingType != 0) {
+				float exp_mult = CalculateCraftingSkillMultiplier(sender, entity, event, craftingType) * 0.75f;
+				exp_mult *= 100;
+				player.m_next_skill.objectKnowledge += skillPointMult * exp_mult *
+					(neutralSkillLevel2 /
+						(player.m_skillFull.objectKnowledge - player.m_skillMod.objectKnowledge));
+				player.m_next_attribute.strength += attributePointMult * exp_mult * 0.5f *
+					(neutralAttributeLevel / player.m_attributeFull.strength);
+				player.m_next_attribute.mind += attributePointMult * exp_mult * 1.5f *
+					(neutralAttributeLevel / player.m_attributeFull.mind);
+				player.m_next_attribute.dexterity += attributePointMult * exp_mult * 0.5f *
+					(neutralAttributeLevel / player.m_attributeFull.dexterity);
+				ARX_PLAYER_CheckSkillBonus();
+			}
+			else if (boost::starts_with(sender->className(), "lockpicks")) {
+				long unlock = GETVarValueLong(entity->m_variables, "§unlock");
+				long trapped = GETVarValueLong(entity->m_variables, "§trapped");
+				if (unlock && !trapped)
+					return result;
+				float exp_mult = 0;
+				/*if (trapped && !unlock) {
+					exp_mult = std::fminl(GETVarValueLong(entity->m_variables, "§trap_lockpickability"),
+						GETVarValueLong(entity->m_variables, "§lockpickability"));
+				}*/
+				if (!unlock) {
+					exp_mult = GETVarValueLong(entity->m_variables, "§lockpickability");
+				}
+				else if (trapped) {
+					exp_mult = GETVarValueLong(entity->m_variables, "§trap_lockpickability");
+				}/*
+				else {
+					exp_mult = GETVarValueLong(entity->m_variables, "§lockpickability");
+				}*/
+				if (exp_mult > 1 && player.m_skillFull.mecanism >= exp_mult) {
+					exp_mult *= 1.25f;
+					player.m_next_skill.mecanism += skillPointMult * exp_mult *
+						(neutralSkillLevel1 /
+							(player.m_skillFull.mecanism - player.m_skillMod.mecanism));
+					player.m_next_attribute.mind += attributePointMult * exp_mult *
+						(neutralAttributeLevel / player.m_attributeFull.mind);
+					player.m_next_attribute.dexterity += attributePointMult * exp_mult *
+						(neutralAttributeLevel / player.m_attributeFull.dexterity);
+					ARX_PLAYER_CheckSkillBonus();
+				}
+			}
+		}
+	}
+
+	return result;
+}
+
+int DetermineCraftingType(std::string senderClass, std::string receiverClass) {
+	if (boost::starts_with(senderClass, "potion_green"))
+		return CTYPE_POISONING;
+	else if (boost::starts_with(receiverClass, "anvil"))
+		return CTYPE_REPAIRING;
+	else if (boost::starts_with(receiverClass, "apparatus"))
+		return CTYPE_BREWING;
+	else if (boost::starts_with(senderClass, "hammer") && boost::starts_with(receiverClass, "tool_blacksmith_sword"))
+		return CTYPE_FORGING;
+	else if (boost::starts_with(senderClass, "crusher") && CanBeCrushed(receiverClass))
+		return CTYPE_GRINDING;
+	else if (boost::starts_with(receiverClass, "bottle_empty") && CanBeBottled(senderClass))
+		return CTYPE_BOTTLING;
+	else if ((boost::starts_with(senderClass, "bottle_water") && boost::starts_with(receiverClass, "flour")) ||
+		(boost::starts_with(senderClass, "flour") && boost::starts_with(receiverClass, "bottle_water")) ||
+		(boost::starts_with(senderClass, "rolling_pin") && boost::starts_with(receiverClass, "bread_uncooked")) ||
+		(boost::starts_with(senderClass, "food_apple") && boost::starts_with(receiverClass, "pie_uncooked")) ||
+		(boost::starts_with(senderClass, "bottle_wine") && boost::starts_with(receiverClass, "applepie")))
+		return CTYPE_BAKING;
+	return 0;
+}
+
+bool CanBeCrushed(std::string itemClass) {
+	return (boost::starts_with(itemClass, "bone") || boost::starts_with(itemClass, "morning_glory") ||
+		boost::starts_with(itemClass, "fern") || boost::starts_with(itemClass, "medicinal_herb") ||
+		boost::starts_with(itemClass, "waterlily"));
+}
+
+bool CanBeBottled(std::string itemClass) {
+	return (boost::starts_with(itemClass, "powder_") && !boost::starts_with(itemClass, "powder_bone"));
+}
+
+bool CombinationToBeRewarded(std::string senderClass, std::string receiverClass) {
+	if (boost::starts_with(senderClass, "crusher") && CanBeCrushed(receiverClass)) {
+		return true;
+	}
+	if (boost::starts_with(receiverClass, "bottle_empty") && CanBeBottled(senderClass)) {
+		return true;
+	}
+	if ((boost::starts_with(senderClass, "bottle_water") && boost::starts_with(receiverClass, "flour")) ||
+		(boost::starts_with(senderClass, "flour") && boost::starts_with(receiverClass, "bottle_water")) ||
+		(boost::starts_with(senderClass, "rolling_pin") && boost::starts_with(receiverClass, "bread_uncooked")) ||
+		(boost::starts_with(senderClass, "food_apple") && boost::starts_with(receiverClass, "pie_uncooked")) ||
+		(boost::starts_with(senderClass, "bottle_wine") && boost::starts_with(receiverClass, "applepie"))) {
+		return true;
+	}
+	return false;
+}
+
+float CalculateCraftingSkillMultiplier(Entity* sender, Entity* entity, const ScriptEventName& event, int craftingType) {
+	float exp_mult = 0;
+	switch (craftingType) {
+	case CTYPE_POISONING: {
+		float poisonable = GETVarValueLong(entity->m_variables, "§poisonable");
+		if (poisonable == 0)
+			return 0;
+		exp_mult = 0.4f;
+		break;
+	}
+	case CTYPE_BREWING:
+		if (sender->groups.count("provisions"))
+			exp_mult = GetPotionCreatingAbilityInfo(sender->className()) / 80.f;
+		break;
+	case CTYPE_REPAIRING:
+		exp_mult = (sender->max_durability - sender->durability) / sender->max_durability;
+		break;
+	case CTYPE_FORGING: {
+		float ready = GETVarValueLong(entity->m_variables, "§ready");
+		if (ready == 0)
+			return 0;
+		exp_mult = 1.5f;
+		break;
+	}
+	case CTYPE_BAKING:
+		return 0.2f;
+	case CTYPE_GRINDING:
+		return 0.2f;
+	case CTYPE_BOTTLING:
+		return 0.15f;
+	}
+	return exp_mult;
+}
+
+float GetPotionCreatingAbilityInfo(std::string potionName) {
+	if (boost::starts_with(potionName, "potion2bewhite")) {//70
+		if (player.m_skillFull.objectKnowledge >= 70)
+			return 70;
+	}
+	else if (boost::starts_with(potionName, "potion2beblue")) {//60
+		if (player.m_skillFull.objectKnowledge >= 60)
+			return 60;
+	}
+	else if (boost::starts_with(potionName, "potion2beorange")) {//50
+		if (player.m_skillFull.objectKnowledge >= 50)
+			return 50;
+	}
+	else if (boost::starts_with(potionName, "potion2bepurple")) {//40
+		if (player.m_skillFull.objectKnowledge >= 40)
+			return 40;
+	}
+	else if (boost::starts_with(potionName, "potion2begreen")) {//30
+		if (player.m_skillFull.objectKnowledge >= 30)
+			return 30;
+	}
+
+	return 0;
+}
+
+
 ScriptResult SendInitScriptEvent(Entity * io) {
 	
 	if (!io) return REFUSE;

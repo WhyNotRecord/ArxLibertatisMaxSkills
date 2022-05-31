@@ -95,6 +95,8 @@ audio::SampleHandle PLAYER_DEATH_BY_FIRE;
 audio::SampleHandle PLAYER_HEART_BEAT;
 audio::SampleHandle PLAYER_LEVEL_UP;
 audio::SampleHandle PLAYER_POISONED;
+audio::SampleHandle PLAYER_ATTRIBUTE_INCREASED;
+audio::SampleHandle PLAYER_SKILL_INCREASED;
 
 // Other SFX samples
 audio::SampleHandle TORCH_START;

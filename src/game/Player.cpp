@@ -169,7 +169,9 @@ std::vector<std::string> g_playerKeyring;
 static unsigned long FALLING_TIME = 0;
 
 std::vector<std::string> g_playerQuestLogEntries;
-
+/*int round(float value) {
+	return (int)floor(value + 0.5f);
+}*/
 bool ARX_PLAYER_IsInFightMode() {
 	arx_assert(entities.player());
 	
@@ -703,6 +705,12 @@ void ARX_PLAYER_MakeFreshHero() {
 	player.m_attribute.dexterity = 6;
 	player.m_attribute.constitution = 6;
 
+	//CRIT_CHANGED
+	player.m_next_attribute.strength = 0;
+	player.m_next_attribute.mind = 0;
+	player.m_next_attribute.dexterity = 0;
+	player.m_next_attribute.constitution = 0;
+
 	PlayerSkill skill;
 	skill.stealth = 0;
 	skill.mecanism = 0;
@@ -714,7 +722,7 @@ void ARX_PLAYER_MakeFreshHero() {
 	skill.closeCombat = 0;
 	skill.defense = 0;
 	
-	player.m_skillOld = player.m_skill = skill;
+	player.m_skillOld = player.m_skill = player.m_next_skill = skill;
 	
 	player.Attribute_Redistribute = 16;
 	player.Skill_Redistribute = 18;
@@ -746,6 +754,12 @@ void ARX_PLAYER_MakeSpHero()
 	player.m_attribute.dexterity = 12;
 	player.m_attribute.constitution = 12;
 
+	//CRIT_CHANGED
+	player.m_next_attribute.strength = 0;
+	player.m_next_attribute.mind = 0;
+	player.m_next_attribute.dexterity = 0;
+	player.m_next_attribute.constitution = 0;
+
 	PlayerSkill skill;
 	skill.stealth = 5;
 	skill.mecanism = 5;
@@ -758,6 +772,17 @@ void ARX_PLAYER_MakeSpHero()
 	skill.defense = 5;
 	
 	player.m_skillOld = player.m_skill = skill;
+
+	player.m_next_skill.stealth = 0;
+	player.m_next_skill.mecanism = 0;
+	player.m_next_skill.intuition = 0;
+	player.m_next_skill.etheralLink = 0;
+	player.m_next_skill.objectKnowledge = 0;
+	player.m_next_skill.casting = 0;
+	player.m_next_skill.projectile = 0;
+	player.m_next_skill.closeCombat = 0;
+	player.m_next_skill.closeCombat = 0;
+	player.m_next_skill.defense = 0;
 
 	player.Attribute_Redistribute = 6;
 	player.Skill_Redistribute = 10;
@@ -882,7 +907,8 @@ void ARX_PLAYER_QuickGeneration() {
  */
 long GetXPforLevel(short level)
 {
-	const long XP_FOR_LEVEL[] = {
+	//CRIT_CHANGED (is this necessary?)
+	/*const long XP_FOR_LEVEL[] = {
 		0,
 		2000,
 		4000,
@@ -898,13 +924,31 @@ long GetXPforLevel(short level)
 		450000,
 		600000,
 		750000
+	};*/
+	const long XP_FOR_LEVEL[] = {
+		0,
+		2000,
+		3000,
+		4500,
+		7000,
+		10000,
+		15000,
+		22500,
+		34000,
+		50000,
+		75000,
+		112500,
+		170000,
+		255000,
+		380000
 	};
 
 	long xpNeeded;
-	if(level < short(std::size(XP_FOR_LEVEL)))
+	if (level < short(std::size(XP_FOR_LEVEL)))
 		xpNeeded = XP_FOR_LEVEL[level];
 	else
-		xpNeeded = level * 60000;
+		//xpNeeded = level * 60000;
+		xpNeeded = level * level * level * 200;
 	return xpNeeded;
 }
 
@@ -914,8 +958,11 @@ long GetXPforLevel(short level)
 static void ARX_PLAYER_LEVEL_UP() {
 	ARX_SOUND_PlayInterface(g_snd.PLAYER_LEVEL_UP);
 	player.level++;
-	player.Skill_Redistribute += 15;
-	player.Attribute_Redistribute++;
+	//CRIT_CHANGED
+	//player.Skill_Redistribute += 15;
+	player.Skill_Redistribute += 9;
+	if (player.level % 2 == 0)
+		player.Attribute_Redistribute++;
 	ARX_PLAYER_ComputePlayerStats();
 	player.lifePool.current = player.m_lifeMaxWithoutMods;
 	player.manaPool.current = player.m_manaMaxWithoutMods;
@@ -995,6 +1042,17 @@ void ARX_PLAYER_FrameCheck(PlatformDuration delta) {
 			// Natural MANA recovery
 			float recoveredMana = 0.0000008f * Framedelay * ((player.m_attributeFull.mind + player.m_skillFull.etheralLink) * 10);
 			
+			//CRIT_CHANGED
+			if (player.manaPool.current < player.manaPool.max) {
+				//Starting skill bonus processing
+				float prevEtheralLinkSkill =
+					player.m_skillFull.etheralLink - player.m_skillMod.etheralLink;
+				player.m_next_skill.etheralLink += skillPointMult * Framedelay *
+					(neutralSkillLevel1 / prevEtheralLinkSkill) / 3000.f;
+				player.m_next_attribute.mind += attributePointMult * Framedelay *
+					(neutralAttributeLevel / player.m_attributeFull.mind) / 6000.f;
+				ARX_PLAYER_CheckSkillBonus();
+			}
 			player.manaPool.current = std::min(player.manaPool.current + recoveredMana, player.manaPool.max);
 		}
 		
@@ -1719,6 +1777,96 @@ void ARX_PLAYER_Frame_Update()
 	ARX_PLAYER_ManageTorch();
 }
 
+//CRIT_CHANGED
+//CRIT_CHANGED
+void ARX_PLAYER_CheckSkillBonus() {
+	if (player.m_next_attribute.strength >= 100) {
+		player.m_attribute.strength++;
+		player.m_next_attribute.strength = 0;
+		ARX_PLAYER_AttributeIncreasedSound();
+	}
+	if (player.m_next_attribute.dexterity >= 100) {
+		player.m_attribute.dexterity++;
+		player.m_next_attribute.dexterity = 0;
+		ARX_PLAYER_AttributeIncreasedSound();
+	}
+	if (player.m_next_attribute.mind >= 100) {
+		player.m_attribute.mind++;
+		player.m_next_attribute.mind = 0;
+		ARX_PLAYER_AttributeIncreasedSound();
+	}
+	if (player.m_next_attribute.constitution >= 100) {
+		player.m_attribute.constitution++;
+		player.m_next_attribute.constitution = 0;
+		ARX_PLAYER_AttributeIncreasedSound();
+	}
+
+	if (player.m_next_skill.stealth >= 100) {
+		player.m_skill.stealth++;
+		player.m_next_skill.stealth = 0;
+		ARX_PLAYER_SkillIncreasedSound();
+	}
+	if (player.m_next_skill.mecanism >= 100) {
+		player.m_skill.mecanism++;
+		player.m_next_skill.mecanism = 0;
+		ARX_PLAYER_SkillIncreasedSound();
+	}
+	if (player.m_next_skill.intuition >= 100) {
+		player.m_skill.intuition++;
+		player.m_next_skill.intuition = 0;
+		ARX_PLAYER_SkillIncreasedSound();
+	}
+	if (player.m_next_skill.etheralLink >= 100) {
+		player.m_skill.etheralLink++;
+		player.m_next_skill.etheralLink = 0;
+		ARX_PLAYER_SkillIncreasedSound();
+	}
+	if (player.m_next_skill.objectKnowledge >= 100) {
+		player.m_skill.objectKnowledge++;
+		player.m_next_skill.objectKnowledge = 0;
+		ARX_PLAYER_SkillIncreasedSound();
+	}
+	if (player.m_next_skill.casting >= 100) {
+		player.m_skill.casting++;
+		player.m_next_skill.casting = 0;
+		ARX_PLAYER_SkillIncreasedSound();
+	}
+	if (player.m_next_skill.closeCombat >= 100) {
+		player.m_skill.closeCombat++;
+		player.m_next_skill.closeCombat = 0;
+		ARX_PLAYER_SkillIncreasedSound();
+	}
+	if (player.m_next_skill.projectile >= 100) {
+		player.m_skill.projectile++;
+		player.m_next_skill.projectile = 0;
+		ARX_PLAYER_SkillIncreasedSound();
+	}
+	if (player.m_next_skill.defense >= 100) {
+		player.m_skill.defense++;
+		player.m_next_skill.defense = 0;
+		ARX_PLAYER_SkillIncreasedSound();
+	}
+}
+
+//CRIT_CHANGED
+void IncreaseIntuitionSkill(float price) {
+	float prevIntuitionSkill =
+		player.m_skillFull.intuition - player.m_skillMod.intuition;
+	player.m_next_skill.intuition += skillPointMult * price *
+		(neutralSkillLevel1 / prevIntuitionSkill) / 10;
+	player.m_next_attribute.mind += attributePointMult * price * 2 *
+		(neutralAttributeLevel / player.m_attributeFull.mind) / 10;
+	ARX_PLAYER_CheckSkillBonus();
+}
+
+void ARX_PLAYER_AttributeIncreasedSound() {
+	ARX_SOUND_PlayInterface(g_snd.PLAYER_ATTRIBUTE_INCREASED);
+}
+
+void ARX_PLAYER_SkillIncreasedSound() {
+	ARX_SOUND_PlayInterface(g_snd.PLAYER_SKILL_INCREASED);
+}
+
 /*!
  * \brief Emit player step noise
  */
@@ -2323,9 +2471,13 @@ void ARX_PLAYER_Manage_Death() {
  * \brief Specific for color checks
  */
 float GetPlayerStealth() {
-	return 15 + player.m_skillFull.stealth * ( 1.0f / 10 );
+	//return 15 + player.m_skillFull.stealth * ( 1.0f / 10 );
+	float crouch = (player.m_currentMovement & PLAYER_CROUCH) ? 1.f : 0.f,
+		stealth = (player.m_currentMovement & PLAYER_MOVE_STEALTH) ? 1.f : 0.f,
+		move = (player.m_currentMovement & PLAYER_MOVE_WALK_FORWARD) ? -1.f : 0.f;
+	return (15 + player.m_skillFull.stealth * (1.0f / 10)) *
+		(1.f + 0.4f * crouch + 0.1f * stealth + 0.15f * move);
 }
-
 /*!
  * \brief Force Player to standard stance
  */

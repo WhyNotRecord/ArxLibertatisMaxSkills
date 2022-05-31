@@ -822,7 +822,9 @@ static void ARX_SOUND_CreateStaticSamples() {
 	g_snd.PLAYER_LEVEL_UP                = createEffectSample("player_level_up.wav");
 	g_snd.PLAYER_POISONED                = createEffectSample("player_poisoned.wav");
 	g_snd.PLAYER_DEATH_BY_FIRE           = createEffectSample("lava_death.wav");
-	
+	g_snd.PLAYER_ATTRIBUTE_INCREASED	 = createEffectSample("player_attribute_up.wav");
+	g_snd.PLAYER_SKILL_INCREASED		 = createEffectSample("anvil_hit.wav");
+
 	// Other SFX samples
 	g_snd.TORCH_START                    = createEffectSample("torch_start.wav");
 	g_snd.TORCH_LOOP                     = createEffectSample("sfx_torch_11khz.wav");
