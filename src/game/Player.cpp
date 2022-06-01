@@ -1858,7 +1858,7 @@ void IncreaseIntuitionSkill(float price) {
 }
 
 void IncreaseStealthSkill(float npcHealth, float distance, bool moving, bool inFOV) {
-	float moveFactor = moving ? 10 : 1;
+	float moveFactor = moving ? 20 : 1;
 	float distanceFactor = MIN_STEALTH_DISTANCE_SQUARE / distance;
 	float frameTime = (float) g_gameTime.lastFrameDuration().value().count() * 0.001f;
 	float fovFactor = inFOV ? 2 : 1;

@@ -877,8 +877,9 @@ float damageNpc(Entity & npc, float dmg, Entity * source, Spell * spell, DamageT
 			prevStrengthAttribute = player.m_attributeFull.strength,
 			prevDexterityAttribute = player.m_attributeFull.dexterity;
 		float exp_mult = dmg / player.m_miscFull.damages * 100;
+		exp_mult *= (npc._npcdata->lifePool.max / 200.f);
 
-		if (npc._npcdata->lifePool.max < 5)
+		/*if (npc._npcdata->lifePool.max < 5)
 			exp_mult *= 0;
 		else if (npc._npcdata->lifePool.max < 10)
 			exp_mult *= 0.05f;
@@ -891,7 +892,7 @@ float damageNpc(Entity & npc, float dmg, Entity * source, Spell * spell, DamageT
 		else if (npc._npcdata->lifePool.max < 100)
 			exp_mult *= 0.4f;
 		else
-			exp_mult *= 0.5f;
+			exp_mult *= 0.5f;*/
 		if (!spell) {
 			WeaponType wt = ARX_EQUIPMENT_GetPlayerWeaponType();
 			if (wt >= WEAPON_BARE && wt <= WEAPON_2H) {

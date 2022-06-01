@@ -1603,8 +1603,8 @@ ScriptResult SendCombineIOScriptEvent(Entity* sender, Entity* entity, const Scri
 				ARX_PLAYER_CheckSkillBonus();
 			}
 			else if (boost::starts_with(sender->className(), "lockpicks")) {//lockpicking processing
-				long unlock = GETVarValueLong(entity->m_variables, "§unlock");
-				long trapped = GETVarValueLong(entity->m_variables, "§trapped");
+				long unlock = GETVarValueLong(entity->m_variables, "\xA7unlock");
+				long trapped = GETVarValueLong(entity->m_variables, "\xA7trapped");
 				if (unlock && !trapped)
 					return result;
 				float exp_mult = 0;
@@ -1613,10 +1613,10 @@ ScriptResult SendCombineIOScriptEvent(Entity* sender, Entity* entity, const Scri
 						GETVarValueLong(entity->m_variables, "§lockpickability"));
 				}*/
 				if (!unlock) {
-					exp_mult = GETVarValueLong(entity->m_variables, "§lockpickability");
+					exp_mult = GETVarValueLong(entity->m_variables, "\xA7lockpickability");
 				}
 				else if (trapped) {
-					exp_mult = GETVarValueLong(entity->m_variables, "§trap_lockpickability");
+					exp_mult = GETVarValueLong(entity->m_variables, "\xA7trap_lockpickability");
 				}/*
 				else {
 					exp_mult = GETVarValueLong(entity->m_variables, "§lockpickability");
@@ -1670,6 +1670,7 @@ int DetermineCraftingType(std::string senderClass, std::string receiverClass) {
 	else if ((boost::starts_with(senderClass, "bottle_water") && boost::starts_with(receiverClass, "flour")) ||
 		(boost::starts_with(senderClass, "flour") && boost::starts_with(receiverClass, "bottle_water")) ||
 		(boost::starts_with(senderClass, "flour") && boost::starts_with(receiverClass, "watering_place")) ||
+		(boost::starts_with(senderClass, "flour") && boost::starts_with(receiverClass, "water_bassin")) ||
 		(boost::starts_with(senderClass, "rolling_pin") && boost::starts_with(receiverClass, "bread_uncooked")) ||
 		(boost::starts_with(senderClass, "food_apple") && boost::starts_with(receiverClass, "pie_uncooked")) ||
 		(boost::starts_with(senderClass, "bottle_wine") && boost::starts_with(receiverClass, "applepie")))
@@ -1697,6 +1698,7 @@ bool CombinationToBeRewarded(std::string senderClass, std::string receiverClass)
 	if ((boost::starts_with(senderClass, "bottle_water") && boost::starts_with(receiverClass, "flour")) ||
 		(boost::starts_with(senderClass, "flour") && boost::starts_with(receiverClass, "bottle_water")) ||
 		(boost::starts_with(senderClass, "flour") && boost::starts_with(receiverClass, "watering_place")) ||
+		(boost::starts_with(senderClass, "flour") && boost::starts_with(receiverClass, "water_bassin")) ||
 		(boost::starts_with(senderClass, "rolling_pin") && boost::starts_with(receiverClass, "bread_uncooked")) ||
 		(boost::starts_with(senderClass, "food_apple") && boost::starts_with(receiverClass, "pie_uncooked")) ||
 		(boost::starts_with(senderClass, "bottle_wine") && boost::starts_with(receiverClass, "applepie"))) {
@@ -1709,7 +1711,7 @@ float CalculateCraftingSkillMultiplier(Entity* sender, Entity* entity, const Scr
 	float exp_mult = 0;
 	switch (craftingType) {
 	case CTYPE_POISONING: {
-		float poisonable = GETVarValueLong(entity->m_variables, "§poisonable");
+		float poisonable = GETVarValueLong(entity->m_variables, "\xA7poisonable");
 		if (poisonable == 0)
 			return 0;
 		exp_mult = 0.4f;
@@ -1723,7 +1725,7 @@ float CalculateCraftingSkillMultiplier(Entity* sender, Entity* entity, const Scr
 		exp_mult = (sender->max_durability - sender->durability) / sender->max_durability;
 		break;
 	case CTYPE_FORGING: {
-		float ready = GETVarValueLong(entity->m_variables, "§ready");
+		float ready = GETVarValueLong(entity->m_variables, "\xA7ready");
 		if (ready == 0)
 			return 0;
 		exp_mult = 1.5f;
