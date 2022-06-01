@@ -1758,7 +1758,13 @@ void ArxGame::manageEditorControls() {
 			}
 			
 			ARX_SOUND_PlayInterface(g_snd.INVSTD);
-			
+			//CRIT_CHANGED
+			bool steal = container && (player.Interface & INTER_STEAL) != 0 && (container->ioflags & IO_NPC) != 0;
+			if (steal) {
+				IncreaseStealthSkillSteal(container->_npcdata->lifePool.current,
+					FlyingOverIO->_itemdata->stealvalue * FlyingOverIO->_itemdata->count,
+					FlyingOverIO->m_inventorySize.x * FlyingOverIO->m_inventorySize.y);
+			}
 			while(FlyingOverIO && entities.player()->inventory->insert(FlyingOverIO)) {
 				FlyingOverIO = InterClick(DANAEMouse);
 				ARX_INVENTORY_IdentifyIO(FlyingOverIO);

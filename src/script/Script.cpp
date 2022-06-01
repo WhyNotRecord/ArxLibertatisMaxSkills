@@ -1588,7 +1588,7 @@ ScriptResult SendCombineIOScriptEvent(Entity* sender, Entity* entity, const Scri
 		if (result != REFUSE ||
 			(result == REFUSE && CombinationToBeRewarded(sender->className(), entity->className()))) {
 			int craftingType = DetermineCraftingType(sender->className(), entity->className());
-			if (craftingType != 0) {
+			if (craftingType != 0) {//crafting processing
 				float exp_mult = CalculateCraftingSkillMultiplier(sender, entity, event, craftingType) * 0.75f;
 				exp_mult *= 100;
 				player.m_next_skill.objectKnowledge += skillPointMult * exp_mult *
@@ -1602,7 +1602,7 @@ ScriptResult SendCombineIOScriptEvent(Entity* sender, Entity* entity, const Scri
 					(neutralAttributeLevel / player.m_attributeFull.dexterity);
 				ARX_PLAYER_CheckSkillBonus();
 			}
-			else if (boost::starts_with(sender->className(), "lockpicks")) {
+			else if (boost::starts_with(sender->className(), "lockpicks")) {//lockpicking processing
 				long unlock = GETVarValueLong(entity->m_variables, "§unlock");
 				long trapped = GETVarValueLong(entity->m_variables, "§trapped");
 				if (unlock && !trapped)
@@ -1633,6 +1633,21 @@ ScriptResult SendCombineIOScriptEvent(Entity* sender, Entity* entity, const Scri
 					ARX_PLAYER_CheckSkillBonus();
 				}
 			}
+			else if (boost::starts_with(sender->className(), "rope") && boost::starts_with(entity->className(), "elevator_mecanism_broken")) {//quest event processing
+				float exp_mult = 100.f;
+				player.m_next_skill.mecanism += skillPointMult * exp_mult *
+					(neutralSkillLevel1 /
+						(player.m_skillFull.mecanism - player.m_skillMod.mecanism));
+				player.m_next_attribute.mind += attributePointMult * exp_mult *
+					(neutralAttributeLevel / player.m_attributeFull.mind);
+				player.m_next_attribute.dexterity += attributePointMult * exp_mult *
+					(neutralAttributeLevel / player.m_attributeFull.dexterity);
+				ARX_PLAYER_CheckSkillBonus();
+			}
+			else if ((entity->ioflags & IO_BLACKSMITH) != 0 && sender->groups.count("armory") && //paid item repair processing
+				sender->durability < sender->max_durability) {//entity->locname = "description_miguel"
+				IncreaseIntuitionSkill((sender->max_durability - sender->durability) * 10);
+			}
 		}
 	}
 
@@ -1654,6 +1669,7 @@ int DetermineCraftingType(std::string senderClass, std::string receiverClass) {
 		return CTYPE_BOTTLING;
 	else if ((boost::starts_with(senderClass, "bottle_water") && boost::starts_with(receiverClass, "flour")) ||
 		(boost::starts_with(senderClass, "flour") && boost::starts_with(receiverClass, "bottle_water")) ||
+		(boost::starts_with(senderClass, "flour") && boost::starts_with(receiverClass, "watering_place")) ||
 		(boost::starts_with(senderClass, "rolling_pin") && boost::starts_with(receiverClass, "bread_uncooked")) ||
 		(boost::starts_with(senderClass, "food_apple") && boost::starts_with(receiverClass, "pie_uncooked")) ||
 		(boost::starts_with(senderClass, "bottle_wine") && boost::starts_with(receiverClass, "applepie")))
@@ -1664,7 +1680,7 @@ int DetermineCraftingType(std::string senderClass, std::string receiverClass) {
 bool CanBeCrushed(std::string itemClass) {
 	return (boost::starts_with(itemClass, "bone") || boost::starts_with(itemClass, "morning_glory") ||
 		boost::starts_with(itemClass, "fern") || boost::starts_with(itemClass, "medicinal_herb") ||
-		boost::starts_with(itemClass, "waterlily"));
+		boost::starts_with(itemClass, "waterlily") || boost::starts_with(itemClass, "snow_drop"));
 }
 
 bool CanBeBottled(std::string itemClass) {
@@ -1680,6 +1696,7 @@ bool CombinationToBeRewarded(std::string senderClass, std::string receiverClass)
 	}
 	if ((boost::starts_with(senderClass, "bottle_water") && boost::starts_with(receiverClass, "flour")) ||
 		(boost::starts_with(senderClass, "flour") && boost::starts_with(receiverClass, "bottle_water")) ||
+		(boost::starts_with(senderClass, "flour") && boost::starts_with(receiverClass, "watering_place")) ||
 		(boost::starts_with(senderClass, "rolling_pin") && boost::starts_with(receiverClass, "bread_uncooked")) ||
 		(boost::starts_with(senderClass, "food_apple") && boost::starts_with(receiverClass, "pie_uncooked")) ||
 		(boost::starts_with(senderClass, "bottle_wine") && boost::starts_with(receiverClass, "applepie"))) {

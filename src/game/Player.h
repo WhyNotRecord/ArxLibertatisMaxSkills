@@ -140,6 +140,12 @@ enum RuneFlag {
 DECLARE_FLAGS(RuneFlag, RuneFlags)
 DECLARE_FLAGS_OPERATORS(RuneFlags)
 
+//CRIT_CHANGED
+const float START_STEALTH_DISTANCE = 800.f;
+const float MIN_STEALTH_DISTANCE = 400.f;
+const float START_STEALTH_DISTANCE_SQUARE = square(START_STEALTH_DISTANCE);
+const float MIN_STEALTH_DISTANCE_SQUARE = square(MIN_STEALTH_DISTANCE);
+
 enum JumpPhase {
 	NotJumping = 0,
 	JumpStart = 1,
@@ -435,6 +441,8 @@ void ARX_PLAYER_AttributeIncreasedSound();
 void ARX_PLAYER_SkillIncreasedSound();
 void ARX_PLAYER_CheckSkillBonus();
 void IncreaseIntuitionSkill(float price);
+void IncreaseStealthSkill(float npcHealth, float distance, bool moving, bool inFOV);
+void IncreaseStealthSkillSteal(float npcHealth, float price, long size);
 //-----------------------------------
 void ARX_PLAYER_MakeSpHero();
 void ARX_PLAYER_LoadHeroAnimsAndMesh();

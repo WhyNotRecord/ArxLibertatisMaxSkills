@@ -349,6 +349,7 @@ void SecondaryInventoryHud::dropEntity() {
 			ARX_PLAYER_AddGold(price);
 			ARX_SOUND_PlayInterface(g_snd.GOLD);
 			ARX_SOUND_PlayInterface(g_snd.INVSTD);
+			//CRIT_CHANGED
 			IncreaseIntuitionSkill(price);
 		}
 		
@@ -385,7 +386,12 @@ void SecondaryInventoryHud::dragEntity(Entity * io) {
 		
 		ARX_SOUND_PlayInterface(g_snd.GOLD);
 		player.gold -= price;
+		//CRIT_CHANGED
 		IncreaseIntuitionSkill(float(price));
+	}
+	//CRIT_CHANGED
+	else if (player.Interface & INTER_STEAL) {
+		IncreaseStealthSkillSteal(container->_npcdata->lifePool.current, io->_itemdata->stealvalue, io->m_inventorySize.x * io->m_inventorySize.y);
 	}
 	
 	ARX_SOUND_PlayInterface(g_snd.INVSTD);

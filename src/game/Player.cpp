@@ -1778,7 +1778,6 @@ void ARX_PLAYER_Frame_Update()
 }
 
 //CRIT_CHANGED
-//CRIT_CHANGED
 void ARX_PLAYER_CheckSkillBonus() {
 	if (player.m_next_attribute.strength >= 100) {
 		player.m_attribute.strength++;
@@ -1848,7 +1847,6 @@ void ARX_PLAYER_CheckSkillBonus() {
 	}
 }
 
-//CRIT_CHANGED
 void IncreaseIntuitionSkill(float price) {
 	float prevIntuitionSkill =
 		player.m_skillFull.intuition - player.m_skillMod.intuition;
@@ -1856,6 +1854,32 @@ void IncreaseIntuitionSkill(float price) {
 		(neutralSkillLevel1 / prevIntuitionSkill) / 10;
 	player.m_next_attribute.mind += attributePointMult * price * 2 *
 		(neutralAttributeLevel / player.m_attributeFull.mind) / 10;
+	ARX_PLAYER_CheckSkillBonus();
+}
+
+void IncreaseStealthSkill(float npcHealth, float distance, bool moving, bool inFOV) {
+	float moveFactor = moving ? 10 : 1;
+	float distanceFactor = MIN_STEALTH_DISTANCE_SQUARE / distance;
+	float frameTime = (float) g_gameTime.lastFrameDuration().value().count() * 0.001f;
+	float fovFactor = inFOV ? 2 : 1;
+	if (distanceFactor > 5)
+		distanceFactor = 5;
+	float prevStealthSkill =
+		player.m_skillFull.stealth - player.m_skillMod.stealth;
+	float expMult = npcHealth * moveFactor * distanceFactor * frameTime * 0.001f;
+	player.m_next_skill.stealth += (neutralSkillLevel1 / prevStealthSkill) * skillPointMult * expMult;
+	player.m_next_attribute.dexterity += (neutralAttributeLevel / player.m_attributeFull.dexterity) * attributePointMult * expMult;
+	//LogInfo << "Stealth. Frametime: " << frameTime;
+	//LogInfo << "HP: " << npcHealth << " Move: " << moveFactor << " Dfactor: " << distanceFactor << " Ffactor: " << expMult;
+	ARX_PLAYER_CheckSkillBonus();
+}
+
+void IncreaseStealthSkillSteal(float npcHealth, float price, long size) {
+	float prevStealthSkill =
+		player.m_skillFull.stealth - player.m_skillMod.stealth;
+	float expMult = npcHealth * price * size * 0.01f;
+	player.m_next_skill.stealth += (neutralSkillLevel1 / prevStealthSkill) * skillPointMult * expMult;
+	player.m_next_attribute.dexterity += (neutralAttributeLevel / player.m_attributeFull.dexterity) * attributePointMult * expMult;
 	ARX_PLAYER_CheckSkillBonus();
 }
 

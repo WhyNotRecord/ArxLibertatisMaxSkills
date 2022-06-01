@@ -346,7 +346,7 @@ void StealIconGui::updateInput() {
 				}
 				
 				if(g_secondaryInventoryHud.isOpen(ioSteal)) {
-					SendIOScriptEvent(entities.player(), ioSteal, SM_STEAL);
+					SendIOScriptEvent(entities.player(), ioSteal, SM_STEAL);//while opening steal inventory
 					bForceEscapeFreeLook = true;
 					lOldTruePlayerMouseLook = !TRUE_PLAYER_MOUSELOOK_ON;
 				}
@@ -1231,8 +1231,6 @@ StealthGauge::StealthGauge()
 	, m_visible(false)
 	, m_color(Color::none)
 	, m_size(32.f, 32.f)
-	, START_STEALTH_DISTANCE(600000.f)
-	, MIN_STEALTH_DISTANCE(300000.f)
 { }
 
 void StealthGauge::init() {
@@ -1255,7 +1253,7 @@ void StealthGauge::updateRect(const Rectf & parent) {
 void StealthGauge::update() {
 	
 	m_visible = false;
-	
+
 	if(!cinematicBorder.isActive()) {
 		float v = GetPlayerStealth();
 		
@@ -1268,66 +1266,6 @@ void StealthGauge::update() {
 				v = (t * (1.0f / 15)) * 0.9f + 0.1f;
 			}
 
-
-			//CRIT_CHANGED
-			//why is it here?
-			//Starting skill bonus processing
-			if (player.m_currentMovement & PLAYER_CROUCH ||
-				player.m_currentMovement & PLAYER_MOVE_STEALTH) {
-				float minDist = FLT_MAX;
-				float minDistAngle = 0.f;
-				for (size_t i = 1; i < entities.size(); i++) {//TODO cleanup
-					const EntityHandle handle = EntityHandle(i);
-					Entity *e = entities[handle];
-
-					if ((!e)
-						|| (!(e->ioflags & IO_NPC))
-						|| (IsDeadNPC(*e))
-						|| (e->show != SHOW_FLAG_IN_SCENE)
-						|| (e->_npcdata->detect)
-						|| (e->_npcdata->reachedtarget)
-						|| (e->_npcdata->behavior & BEHAVIOUR_FIGHT))
-						continue;
-
-					float dist = arx::distance2(e->pos, player.pos);
-
-					if (minDist > dist && dist < START_STEALTH_DISTANCE) {
-						if (e->_npcdata && e->_npcdata->lifePool.max >= 10) {
-							// Retreives Head group position for "eye" pos.
-							ObjVertHandle grp = e->obj->fastaccess.head_group_origin;
-							Vec3f orgn = e->pos - Vec3f(0.f, (grp == ObjVertHandle()) ? 90.f : 120.f, 0.f);
-							Vec3f dest = player.pos + Vec3f(0.f, 90.f, 0.f);
-
-							// Check for Field of vision angle
-							float aa = getAngle(orgn.x, orgn.z, dest.x, dest.z);
-							aa = MAKEANGLE(glm::degrees(aa));
-							float ab = MAKEANGLE(e->angle.getYaw());
-							float finalAngle = glm::abs(AngularDifference(aa, ab));
-							if (finalAngle < 75.f) {
-								minDist = dist;
-								minDistAngle = finalAngle;
-								LogInfo << e->className() << " dist: " << minDist << " angle: " << minDistAngle;
-							}
-							else if (dist < MIN_STEALTH_DISTANCE && player.m_currentMovement & PLAYER_MOVE_WALK_FORWARD) {
-								minDist = dist;
-								minDistAngle = 30;
-								LogInfo << e->className() << " dist: " << minDist << " fake angle: " << minDistAngle;
-							}
-						}
-					}
-				}
-				if (minDist < START_STEALTH_DISTANCE) {
-					float expMult = START_STEALTH_DISTANCE / (minDistAngle * minDist * 0.33f);
-					LogInfo << "multiplier value: " << expMult;
-					float prevStealthSkill =
-						player.m_skillFull.stealth - player.m_skillMod.stealth;
-					player.m_next_skill.stealth += skillPointMult * expMult *
-						(neutralSkillLevel1 / prevStealthSkill);
-					player.m_next_attribute.dexterity += attributePointMult * expMult *
-						(neutralAttributeLevel / player.m_attributeFull.dexterity);
-					ARX_PLAYER_CheckSkillBonus();
-				}
-			}
 			
 			m_color = Color::gray(v);
 			

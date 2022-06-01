@@ -2564,6 +2564,7 @@ void CheckNPCEx(Entity & io) {
 	// Start as not visible
 	long Visible = 0;
 	
+	bool playerIsInFOV = false;
 	// Check visibility only if player is visible, not too far and not dead
 	if(entities.player()->invisibility <= 0.f && ds < square(2000.f) && player.lifePool.current > 0.f) {
 		
@@ -2575,7 +2576,6 @@ void CheckNPCEx(Entity & io) {
 		long playerRoom = ARX_PORTALS_GetRoomNumForPosition(player.pos, 1);
 		
 		float fdist = SP_GetRoomDist(io.pos, player.pos, io.room, playerRoom);
-		
 		// Use Portal Room Distance for Extra Visibility Clipping.
 		if(playerRoom > -1 && io.room > -1 && fdist > 2000.f) {
 			// nothing to do
@@ -2594,7 +2594,7 @@ void CheckNPCEx(Entity & io) {
 			aa = MAKEANGLE(glm::degrees(aa));
 			float ab = MAKEANGLE(io.angle.getYaw());
 			if(glm::abs(AngularDifference(aa, ab)) < 110.f) {
-				
+				playerIsInFOV = true;
 				// Check for Darkness/Stealth
 				if(CURRENT_PLAYER_COLOR > GetPlayerStealth() || player.torch
 				   || ds < square(200.f)) {
@@ -2614,6 +2614,22 @@ void CheckNPCEx(Entity & io) {
 			io._npcdata->detect = 1;
 		}
 		
+		//CRIT_CHANGED
+		if (!Visible && !cinematicBorder.isActive())
+			if ((playerIsInFOV && ds < START_STEALTH_DISTANCE_SQUARE) || ds < MIN_STEALTH_DISTANCE_SQUARE)
+				if (!boost::starts_with(io.className(), "frog") && io._npcdata->lifePool.max > 7) {//e->_npcdata->behavior & BEHAVIOUR_FIGHT (but only when fighting with player)
+					bool moving = (bool)(player.m_currentMovement & PLAYER_MOVE_WALK_FORWARD) ||
+						(player.m_currentMovement & PLAYER_MOVE_WALK_BACKWARD) || 
+						(player.m_currentMovement & PLAYER_MOVE_STRAFE_LEFT) || 
+						(player.m_currentMovement & PLAYER_MOVE_STRAFE_RIGHT);
+					bool stealth = player.m_currentMovement & PLAYER_CROUCH ||
+						player.m_currentMovement & PLAYER_MOVE_STEALTH;
+
+					if (stealth) {
+						IncreaseStealthSkill(io._npcdata->lifePool.current, ds, moving, playerIsInFOV);
+					}
+					//LogInfo << io.className() << " dist: " << ds << " HP: " << io._npcdata->lifePool.current;
+			}
 	}
 	
 	// if not visible but was visible, sends an Undetectplayer Event
