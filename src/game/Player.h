@@ -442,6 +442,7 @@ void ARX_PLAYER_SkillIncreasedSound();
 void ARX_PLAYER_CheckSkillBonus();
 void IncreaseIntuitionSkill(float price);
 void IncreaseStealthSkill(float npcHealth, float distance, bool moving, bool inFOV);
+void IncreaseStealthSkill(bool moving, float stealthFactor);
 void IncreaseStealthSkillSteal(float npcHealth, float price, long size);
 //-----------------------------------
 void ARX_PLAYER_MakeSpHero();

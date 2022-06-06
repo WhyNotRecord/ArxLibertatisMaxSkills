@@ -76,6 +76,7 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #include "game/Item.h"
 #include "game/Player.h"
 #include "game/Spells.h"
+#include "game/StealthWatcher.h"
 
 #include "gui/Cursor.h"
 #include "gui/Dragging.h"
@@ -2612,30 +2613,28 @@ void CheckNPCEx(Entity & io) {
 			// if visible but was NOT visible, sends an Detectplayer Event
 			SendIOScriptEvent(nullptr, &io, SM_DETECTPLAYER);
 			io._npcdata->detect = 1;
+			//CRIT_CHANGED
+			StealthWatcher::getInstance().addDetected(io);
 		}
-		
-		//CRIT_CHANGED
-		if (!Visible && !cinematicBorder.isActive())
-			if ((playerIsInFOV && ds < START_STEALTH_DISTANCE_SQUARE) || ds < MIN_STEALTH_DISTANCE_SQUARE)
-				if (!boost::starts_with(io.className(), "frog") && io._npcdata->lifePool.max > 7) {//e->_npcdata->behavior & BEHAVIOUR_FIGHT (but only when fighting with player)
-					bool moving = (bool)(player.m_currentMovement & PLAYER_MOVE_WALK_FORWARD) ||
-						(player.m_currentMovement & PLAYER_MOVE_WALK_BACKWARD) || 
-						(player.m_currentMovement & PLAYER_MOVE_STRAFE_LEFT) || 
-						(player.m_currentMovement & PLAYER_MOVE_STRAFE_RIGHT);
-					bool stealth = player.m_currentMovement & PLAYER_CROUCH ||
-						player.m_currentMovement & PLAYER_MOVE_STEALTH;
-
-					if (stealth) {
-						IncreaseStealthSkill(io._npcdata->lifePool.current, ds, moving, playerIsInFOV);
-					}
-					//LogInfo << io.className() << " dist: " << ds << " HP: " << io._npcdata->lifePool.current;
-			}
+	}
+	//CRIT_CHANGED
+	else {
+		StealthWatcher::getInstance().leaved(io);
 	}
 	
 	// if not visible but was visible, sends an Undetectplayer Event
 	if(!Visible && io._npcdata->detect) {
 		SendIOScriptEvent(nullptr, &io, SM_UNDETECTPLAYER);
 		io._npcdata->detect = 0;
+	}
+
+	if (!Visible) {
+		//CRIT_CHANGED
+		if ((playerIsInFOV && ds < START_STEALTH_DISTANCE_SQUARE) || ds < MIN_STEALTH_DISTANCE_SQUARE)
+			if (!boost::starts_with(io.className(), "frog") && io._npcdata->lifePool.max > 7) {//e->_npcdata->behavior & BEHAVIOUR_FIGHT (but only when fighting with player)
+				StealthWatcher::getInstance().addUndetected(io, ds, playerIsInFOV);
+				//LogInfo << io.className() << " dist: " << ds << " HP: " << io._npcdata->lifePool.current;
+			}
 	}
 	
 }

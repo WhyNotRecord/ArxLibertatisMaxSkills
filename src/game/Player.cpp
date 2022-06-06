@@ -75,6 +75,7 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #include "game/Item.h"
 #include "game/Missile.h"
 #include "game/NPC.h"
+#include "game/StealthWatcher.h"
 #include "game/spell/FlyingEye.h"
 #include "game/spell/Cheat.h"
 #include "game/effect/Quake.h"
@@ -1010,7 +1011,8 @@ void ARX_PLAYER_FrameCheck(PlatformDuration delta) {
 		
 		UpdateIOInvisibility(entities.player());
 		// Natural LIFE recovery
-		float inc = 0.00008f * Framedelay * (player.m_attributeFull.constitution + player.m_attributeFull.strength * 0.5f + player.m_skillFull.defense) * 0.02f;
+		//CRIT_CHANGED
+		float inc = 0.00008f * Framedelay * (player.m_attributeFull.constitution + player.m_attributeFull.strength * 0.5f + player.m_skillFull.defense) * 0.02f * (player.hunger / 100);
 		
 		if(player.lifePool.current > 0.f) {
 			float inc_hunger = 0.00008f * Framedelay * (player.m_attributeFull.constitution + player.m_attributeFull.strength * 0.5f) * 0.02f;
@@ -1029,13 +1031,13 @@ void ARX_PLAYER_FrameCheck(PlatformDuration delta) {
 
 			player.hunger -= inc_hunger * .5f;
 
-			if(player.hunger < -10.f)
-				player.hunger = -10.f;
+			if(player.hunger < -25.f)
+				player.hunger = -25.f;
 
 			if(!BLOCK_PLAYER_CONTROLS) {
-				if(player.hunger < 0.f)
+				/*if(player.hunger < 0.f)
 					player.lifePool.current -= inc * 0.5f;
-				else
+				else*/
 					player.lifePool.current += inc;
 			}
 			
@@ -1078,6 +1080,21 @@ void ARX_PLAYER_FrameCheck(PlatformDuration delta) {
 					player.poison -= cp;
 				}
 			}
+
+		bool stealth = player.m_currentMovement & PLAYER_CROUCH ||
+			player.m_currentMovement & PLAYER_MOVE_STEALTH;
+
+		if (stealth) {
+			bool moving = (bool)(player.m_currentMovement & PLAYER_MOVE_WALK_FORWARD) ||
+				(player.m_currentMovement & PLAYER_MOVE_WALK_BACKWARD) ||
+				(player.m_currentMovement & PLAYER_MOVE_STRAFE_LEFT) ||
+				(player.m_currentMovement & PLAYER_MOVE_STRAFE_RIGHT);
+
+			float stealthFactor = StealthWatcher::getInstance().getNearestEnemyFactor();
+			stealthFactor *= (Framedelay * 0.001f);
+			IncreaseStealthSkill(moving, stealthFactor);
+		}
+
 
 		if(player.poison < 0.1f)
 			player.poison = 0.f;
@@ -1681,6 +1698,7 @@ void ARX_PLAYER_InitPlayer() {
 	player.doingmagic = 0;
 	
 	ARX_PLAYER_MakeFreshHero();
+	StealthWatcher::getInstance().clear();
 }
 
 /*!
@@ -1871,6 +1889,16 @@ void IncreaseStealthSkill(float npcHealth, float distance, bool moving, bool inF
 	player.m_next_attribute.dexterity += (neutralAttributeLevel / player.m_attributeFull.dexterity) * attributePointMult * expMult;
 	//LogInfo << "Stealth. Frametime: " << frameTime;
 	//LogInfo << "HP: " << npcHealth << " Move: " << moveFactor << " Dfactor: " << distanceFactor << " Ffactor: " << expMult;
+	ARX_PLAYER_CheckSkillBonus();
+}
+
+void IncreaseStealthSkill(bool moving, float stealthFactor) {
+	float moveFactor = moving ? 20 : 1;
+	float prevStealthSkill =
+		player.m_skillFull.stealth - player.m_skillMod.stealth;
+	float expMult = stealthFactor * moveFactor;
+	player.m_next_skill.stealth += (neutralSkillLevel1 / prevStealthSkill) * skillPointMult * expMult;
+	player.m_next_attribute.dexterity += (neutralAttributeLevel / player.m_attributeFull.dexterity) * attributePointMult * expMult;
 	ARX_PLAYER_CheckSkillBonus();
 }
 
