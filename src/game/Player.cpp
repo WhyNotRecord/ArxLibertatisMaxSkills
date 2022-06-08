@@ -1090,7 +1090,7 @@ void ARX_PLAYER_FrameCheck(PlatformDuration delta) {
 				(player.m_currentMovement & PLAYER_MOVE_STRAFE_LEFT) ||
 				(player.m_currentMovement & PLAYER_MOVE_STRAFE_RIGHT);
 
-			float stealthFactor = StealthWatcher::getInstance().getNearestEnemyFactor();
+			float stealthFactor = StealthWatcher::getInstance().getStealthBonusFactor();
 			stealthFactor *= (Framedelay * 0.001f);
 			IncreaseStealthSkill(moving, stealthFactor);
 		}

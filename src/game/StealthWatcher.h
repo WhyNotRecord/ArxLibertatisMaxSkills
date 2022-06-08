@@ -8,6 +8,7 @@ class StealthWatcher {
 private:
 	//static StealthWatcher* swInstance;
 	std::map<std::string, float> factors;
+	float factorCache = -1.f;
 
 public:
 	static StealthWatcher& getInstance()
@@ -31,7 +32,9 @@ public:
 
 	void leaved(Entity& io);
 
-	float getNearestEnemyFactor();
+	float getStealthBonusFactor();
+
+	void evaluateStealthBonusFactor();
 
 	void clear();
 };
